@@ -65,33 +65,33 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: Text("Login")),
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Email",
                     border: OutlineInputBorder(),
                   ),
                 ),
                 SizedBox(height: 20),
                 TextField(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
                 ElevatedButton(
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.blue,
-                    fixedSize: const Size(500, 50),
+                    fixedSize: Size(500, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -99,15 +99,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.pushNamed(context, "/");
                   },
-                  child: const Text(
+                  child: Text(
                     "Login",
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
-                SizedBox(height: 20),
-                const SizedBox(height: 20),
+                SizedBox(height: 5),
                 Row(
-                  children: const <Widget>[
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text("Don't have an account?"),
+                    TextButton(
+                      onPressed: () {},
+                      child: Text("Sign Up", style: TextStyle(color: Colors.black)),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 5),
+                Row(
+                  children: <Widget>[
                     Expanded(child: Divider(thickness: 1, color: Colors.grey)),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8.0),

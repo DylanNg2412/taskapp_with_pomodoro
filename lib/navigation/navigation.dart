@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:taskapp_with_pomodoro/ui/add_task/add_task_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/chart/chart_screen.dart';
+import 'package:taskapp_with_pomodoro/ui/edit_task/edit_task_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/home/home_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/login/login_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
@@ -34,7 +35,14 @@ class Navigation {
       name: Screen.addTask.name,
       builder: (context, state) => const AddTaskScreen()
     ),
+    GoRoute(
+      path: "/editTask/:id",
+      name: Screen.editTask.name,
+      builder: (context, state) => EditTaskScreen(
+        id: state.pathParameters["id"]!,
+      )
+    ),
   ];
 }
 
-enum Screen { home, pomodoro, chart, addTask, login }
+enum Screen { home, pomodoro, chart, addTask, editTask, login }
