@@ -5,6 +5,7 @@ import 'package:taskapp_with_pomodoro/ui/edit_task/edit_task_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/home/home_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/login/login_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
+import 'package:taskapp_with_pomodoro/ui/sign_up/sign_up_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/tab_container/tab_container.dart';
 
 class Navigation {
@@ -42,7 +43,12 @@ class Navigation {
         id: state.pathParameters["id"]!,
       )
     ),
+    GoRoute(
+      path: "/signUp",
+      name: Screen.signUp.name,
+      builder: (context, state) => const SignUpScreen(),
+    ),
   ];
 }
 
-enum Screen { home, pomodoro, chart, addTask, editTask, login }
+enum Screen { home, pomodoro, chart, addTask, editTask, login, signUp }

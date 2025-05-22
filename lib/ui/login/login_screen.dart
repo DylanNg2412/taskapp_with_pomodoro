@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:taskapp_with_pomodoro/auth/auth_service.dart';
 import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -14,6 +15,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final AuthService authService = AuthService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+
   static final supabase = Supabase.instance.client;
 
   @override
@@ -32,6 +37,22 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  void _loginListener() async {
+    try {
+      await authService.logInWithEmailPassword(
+        _emailController.text,
+        _passController.text,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Login failed: $e")));
+      }
+      debugPrint("Login failed: $e");
+    }
+  }
+
   Future<AuthResponse> _googleSignIn() async {
     final clientId = dotenv.get('OAUTH_CLIENT_ID');
     final signInOption = GoogleSignIn(serverClientId: clientId);
@@ -47,10 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final accessToken = googleAuth.accessToken;
     final idToken = googleAuth.idToken;
 
-    if (accessToken == null ) {
+    if (accessToken == null) {
       debugPrint("No access token found");
     }
-    
+
     if (idToken == null) {
       debugPrint("No ID token found");
     }
@@ -60,6 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
       idToken: idToken!,
       accessToken: accessToken,
     );
+  }
+
+  void _navigateToSignUp() {
+    context.pushNamed(Screen.signUp.name);
   }
 
   @override
@@ -74,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     labelText: "Email",
                     border: OutlineInputBorder(),
@@ -81,11 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 20),
                 TextField(
+                  obscureText: true,
+                  controller: _passController,
                   decoration: InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(),
                   ),
-                  obscureText: true,
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
@@ -96,13 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/");
-                  },
-                  child: Text(
-                    "Login",
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  onPressed: _loginListener,
+                  child: Text("Login", style: TextStyle(color: Colors.white)),
                 ),
                 SizedBox(height: 5),
                 Row(
@@ -110,8 +132,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: <Widget>[
                     Text("Don't have an account?"),
                     TextButton(
-                      onPressed: () {},
-                      child: Text("Sign Up", style: TextStyle(color: Colors.black)),
+                      onPressed: _navigateToSignUp,
+                      child: Text(
+                        "Sign Up",
+                        style: TextStyle(color: Colors.black),
+                      ),
                     ),
                   ],
                 ),

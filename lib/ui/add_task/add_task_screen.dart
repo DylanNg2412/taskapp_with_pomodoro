@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 import 'package:taskapp_with_pomodoro/service/storage_service.dart';
@@ -18,6 +19,8 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final repo = TaskRepoSupabase();
   final storageService = StorageService();
+  final supabase = Supabase.instance.client;
+
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
   String? _titleError;
@@ -49,6 +52,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         title: _titleController.text,
         body: _bodyController.text,
         img: fileName ?? "",
+        userId: supabase.auth.currentUser!.id,
       ),
     );
     _showSnackbar("Task added successfully");
@@ -95,6 +99,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               SizedBox(height: 16),
               TextField(
+                maxLines: null,
                 controller: _bodyController,
                 decoration: InputDecoration(
                   hintText: "Enter description",
@@ -103,13 +108,19 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              if(bytes != null) Image.memory(bytes!, width: double.infinity, height: 150, fit: BoxFit.cover,),
-              GestureDetector(onTap: _pickFile, child: Icon(Icons.add_a_photo),),
+              if (bytes != null)
+                Image.memory(
+                  bytes!,
+                  width: double.infinity,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              GestureDetector(onTap: _pickFile, child: Icon(Icons.add_a_photo)),
               SizedBox(height: 16),
-              ElevatedButton(onPressed: _addTask, child: Text("Add"))
+              ElevatedButton(onPressed: _addTask, child: Text("Add")),
             ],
           ),
-        )
+        ),
       ),
     );
   }

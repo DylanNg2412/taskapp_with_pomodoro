@@ -4,6 +4,7 @@ class Task {
   final String body;
   final TaskStatus status; // by default it should be "Planned"
   final String img;
+  final String? userId;
 
   static const name = "tasks";
 
@@ -13,6 +14,7 @@ class Task {
     required this.body,
     this.status = TaskStatus.planned,
     this.img = "",
+    required this.userId,
   });
 
   Task copy({
@@ -21,6 +23,7 @@ class Task {
     String? body,
     TaskStatus? status,
     String? img,
+    String? userId,
   }) {
     return Task(
       id: id ?? this.id,
@@ -28,6 +31,7 @@ class Task {
       body: body ?? this.body,
       status: status ?? this.status,
       img: img ?? this.img,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -37,12 +41,13 @@ class Task {
       "body": body,
       "status": status.name,
       "img": img,
+      "user_id": userId,
     };
   }
 
   @override
   String toString() {
-    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, img: $img)";
+    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, img: $img, userId: $userId)";
   }
 
   static Task fromMap(Map<String, dynamic> map) {
@@ -55,6 +60,7 @@ class Task {
         orElse: () => TaskStatus.planned, // if no match is found, it defaults to TaskStatus.planned
       ),
       img: map["img"],
+      userId: map["user_id"],
     );
   }
 }

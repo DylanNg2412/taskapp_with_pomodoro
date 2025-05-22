@@ -29,10 +29,18 @@ class TaskRepoSupabase {
   }
 
   Future<void> updateTask(Task task) async {
-    await supabase.from('tasks').update(task.toMap()).eq('id', task.id!);
+    await supabase
+    .from('tasks')
+    .update(task.toMap())
+    .eq('id', task.id!)
+    .eq('user_id', task.userId!);
   }
 
-  Future<void> deleteTask(int id) async {
-    await supabase.from('tasks').delete().eq('id', id);
+  Future<void> deleteTask(int id, String userId) async {
+    await supabase
+    .from('tasks')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
   }
 }

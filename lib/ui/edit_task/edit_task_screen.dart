@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 import 'package:taskapp_with_pomodoro/service/storage_service.dart';
@@ -20,6 +21,8 @@ class EditTaskScreen extends StatefulWidget {
 class _EditTaskScreenState extends State<EditTaskScreen> {
   final repo = TaskRepoSupabase();
   final storageService = StorageService();
+  final supabase = Supabase.instance.client;
+
   List<Task> tasks = [];
   late Task? task;
 
@@ -57,6 +60,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
     if (task == null) {
       _showSnackBar("Something went wrong");
+      return;
     }
 
     if (fileName != null && bytes != null) {
@@ -68,7 +72,8 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         title: _titleController.text,
         body: _bodyController.text,
         img: fileName ?? "",
-      ),
+        userId: supabase.auth.currentUser!.id,
+      )
     );
 
     if (!mounted) return;
@@ -102,7 +107,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     // Delete the task from the database
     if (task != null) {
       try {
-        await repo.deleteTask(task!.id!);
+        await repo.deleteTask(task!.id!, supabase.auth.currentUser!.id);
         if (!mounted) return;
         _showSnackBar("Task deleted successfully");
         // Navigate back with result
@@ -137,12 +142,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Edit Task"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.delete, color: Colors.red),
-            onPressed: _deleteTask,
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -159,6 +158,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               ),
               SizedBox(height: 16),
               TextField(
+                maxLines: null,
                 controller: _bodyController, // Fixed: was using _titleController twice
                 decoration: InputDecoration(
                   hintText: "Enter new body...", // Fixed: incorrect hint text
