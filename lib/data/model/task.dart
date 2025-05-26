@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
 class Task {
   int? id;
   final String title;
@@ -55,9 +58,15 @@ class Task {
       id: map["id"],
       title: map["title"],
       body: map["body"],
-      status: TaskStatus.values.firstWhere( // gets all the possible values in TaskStatus enum, then finds the first enum value that matches the condition
-        (e) => e.name == map["status"], // compares the enum's name with the map's status value
-        orElse: () => TaskStatus.planned, // if no match is found, it defaults to TaskStatus.planned
+      status: TaskStatus.values.firstWhere(
+        // gets all the possible values in TaskStatus enum, then finds the first enum value that matches the condition
+        (e) =>
+            e.name ==
+            map["status"], // compares the enum's name with the map's status value
+        orElse:
+            () =>
+                TaskStatus
+                    .planned, // if no match is found, it defaults to TaskStatus.planned
       ),
       img: map["img"],
       userId: map["user_id"],
@@ -78,6 +87,26 @@ extension TaskStatusToString on TaskStatus {
         return "Completed";
     }
   }
+
+  IconData get taskIcon {
+    switch (this) {
+      case TaskStatus.planned:
+        return Icons.event_note;
+      case TaskStatus.inProgress:
+        return Icons.hourglass_empty;
+      case TaskStatus.completed:
+        return Icons.check_box_rounded;
+    }
+  }
+
+  Color get taskBgColor {
+    switch (this) {
+      case TaskStatus.planned:
+        return Color.fromARGB(255, 186, 72, 72);
+      case TaskStatus.inProgress:
+        return Color.fromARGB(255, 33, 150, 243);
+      case TaskStatus.completed:
+        return Color.fromARGB(255, 5, 184, 95);
+    }
+  }
 }
-
-

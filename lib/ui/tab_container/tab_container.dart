@@ -14,9 +14,12 @@ class TabContainer extends StatefulWidget {
 
 class _TabContainerState extends State<TabContainer> {
   Widget _tabBarItem(String title, IconData icon) {
-    return SizedBox(
-      height: 50,
-      child: Column(children: [Icon(icon), Text(title)]),
+    return Padding(
+      padding: const EdgeInsets.only(top: 10.0),
+      child: SizedBox(
+        height: 55,
+        child: Column(children: [Icon(icon), Text(title)]),
+      ),
     );
   }
 
