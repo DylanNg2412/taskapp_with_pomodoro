@@ -19,9 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _signUpListener() async {
     if (_passController.text != _confirmPassController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match!")));
+      _showSnackbar("Passwords do not match!", isSuccess: false);
       return;
     }
 
@@ -30,16 +28,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _emailController.text,
         _passController.text,
       );
-      if (!mounted) return;
-      context.pushReplacementNamed(Screen.login.name);
+      // Show success message
+      if (mounted) {
+        _showSnackbar("Account created successfully!");
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Sign Up failed: $e")));
+        _showSnackbar("Sign Up failed: $e", isSuccess: false);
       }
       debugPrint("Signup Error $e");
     }
+  }
+
+  void _showSnackbar(String msg, {bool isSuccess = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   @override

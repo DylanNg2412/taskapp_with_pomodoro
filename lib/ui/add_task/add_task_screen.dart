@@ -72,13 +72,20 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  void _showSnackbar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+void _showSnackbar(String msg, {bool isSuccess = true}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(msg),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: isSuccess ? Colors.green : Colors.red,
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text("Add Task")),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(16.0),

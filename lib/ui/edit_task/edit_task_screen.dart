@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 import 'package:taskapp_with_pomodoro/service/storage_service.dart';
+import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
 
 class EditTaskScreen extends StatefulWidget {
   const EditTaskScreen({super.key, required this.id});
@@ -23,7 +24,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   final supabase = Supabase.instance.client;
 
   List<Task> tasks = [];
-  late Task? task;
+  Task? task;
 
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
@@ -54,11 +55,11 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
   void _editTask() async {
     if (_titleController.text.isEmpty || _bodyController.text.isEmpty) {
-      return _showSnackBar("Fields cannot be empty");
+      return _showSnackbar("Fields cannot be empty");
     }
 
     if (task == null) {
-      _showSnackBar("Something went wrong");
+      _showSnackbar("Something went wrong");
       return;
     }
 
@@ -72,50 +73,54 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         body: _bodyController.text,
         img: fileName ?? "",
         userId: supabase.auth.currentUser!.id,
-      )
+      ),
     );
 
     if (!mounted) return;
-    _showSnackBar("Task edited successfully");
-    context.pop(true);
+    _showSnackbar("Task edited successfully");
+    Navigator.pop(context, true);
   }
-  
+
   void _deleteTask() async {
-    // Show confirmation dialog before deleting
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Task'),
-        content: Text('Are you sure you want to delete this task?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ) ?? false;
-    
-    // If user canceled, return early
+    final shouldDelete =
+        await showDialog<bool>(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('Delete Task'),
+                content: Text('Are you sure you want to delete this task?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text('Delete', style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+
     if (!shouldDelete) return;
-    
-    // Delete the task from the database
+
     if (task != null) {
       try {
         await repo.deleteTask(task!.id!, supabase.auth.currentUser!.id);
         if (!mounted) return;
-        _showSnackBar("Task deleted successfully");
-        // Navigate back with result
+        _showSnackbar("Task deleted successfully");
         context.pop(true);
       } catch (e) {
-        _showSnackBar("Failed to delete task: ${e.toString()}");
+        if (!mounted) return;
+        _showSnackbar(
+          "Failed to delete task: ${e.toString()}",
+          isSuccess: false,
+        );
+        debugPrint("Delete task error: $e");
       }
     } else {
-      _showSnackBar("Cannot delete: Task not found");
+      _showSnackbar("Cannot delete: Task not found", isSuccess: false);
     }
   }
 
@@ -132,16 +137,49 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     }
   }
 
-  void _showSnackBar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  void _startPomodoro() async {
+    if (task == null) {
+      _showSnackbar("No task selected for Pomodoro");
+      return;
+    }
+
+    final updated = task!.copy(status: TaskStatus.inProgress);
+    await repo.updateTask(updated);
+
+    if (!mounted) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PomodoroScreen(task: updated)),
+    );
+
+    if (result == true) {
+      final refreshed = await repo.getTaskById(task!.id!);
+      if (mounted) {
+        setState(() {
+          task = refreshed;
+          _titleController.text = task!.title;
+          _bodyController.text = task!.body;
+          _loadImage(); // reload image if needed
+        });
+      }
+    }
+  }
+
+  void _showSnackbar(String msg, {bool isSuccess = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Edit Task"),
-      ),
+      appBar: AppBar(title: Text("Edit Task")),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(16.0),
@@ -158,12 +196,14 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               SizedBox(height: 16),
               TextField(
                 maxLines: null,
-                controller: _bodyController, // Fixed: was using _titleController twice
+                controller: _bodyController,
                 decoration: InputDecoration(
-                  hintText: "Enter new body...", // Fixed: incorrect hint text
+                  hintText: "Enter new body...",
                   border: OutlineInputBorder(),
                 ),
               ),
+              SizedBox(height: 16),
+              Text("Status: ${task?.status.displayName ?? "Unknown"}"),
               SizedBox(height: 16),
               if (bytes != null)
                 Image.memory(
@@ -176,28 +216,54 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               SizedBox(height: 16),
               GestureDetector(onTap: _pickFile, child: Icon(Icons.add_a_photo)),
               SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Column(
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _editTask,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _editTask,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text("Save"),
+                        ),
                       ),
-                      child: Text("Save Changes"),
-                    ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _deleteTask,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text("Delete"),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
+                  SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _deleteTask,
+                      onPressed: _startPomodoro,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text("Delete Task"),
+                      child: Text("Start Pomodoro"),
                     ),
                   ),
                 ],

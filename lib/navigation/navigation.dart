@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:taskapp_with_pomodoro/ui/add_task/add_task_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/chart/chart_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/edit_task/edit_task_screen.dart';
-import 'package:taskapp_with_pomodoro/ui/home/home_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/login/login_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/sign_up/sign_up_screen.dart';

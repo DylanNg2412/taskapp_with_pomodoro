@@ -43,14 +43,26 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text,
         _passController.text,
       );
+      // Show success message
+      if (mounted) {
+        _showSnackbar("Login successful!");
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Login failed: $e")));
+        _showSnackbar("Login failed: $e", isSuccess: false);
       }
       debugPrint("Login failed: $e");
     }
+  }
+
+  void _showSnackbar(String msg, {bool isSuccess = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   Future<AuthResponse> _googleSignIn() async {
@@ -63,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (googleUser == null) {
       debugPrint("Google sign-in failed");
     }
-    final googleSignIn = await signInOption.signIn();
+    // final googleSignIn = await signInOption.signIn();
     final googleAuth = await googleUser!.authentication;
     final accessToken = googleAuth.accessToken;
     final idToken = googleAuth.idToken;
@@ -135,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _navigateToSignUp,
                       child: Text(
                         "Sign Up",
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: Colors.blue),
                       ),
                     ),
                   ],

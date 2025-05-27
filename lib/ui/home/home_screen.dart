@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   var tasks = <Task>[];
   String? userPhotoUrl;
   String searchQuery = '';
-  String sortBy = 'None';
+  String sortBy = 'Default';
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -42,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _getUserProfile() async {
-    // Get current user session
     final supabase = Supabase.instance.client;
     final User? user = supabase.auth.currentUser;
 
@@ -70,15 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text('Are you sure you want to logout?'),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _signOut(); // Perform logout
+                Navigator.of(context).pop();
+                _signOut();
               },
               child: Text('Logout'),
             ),
@@ -120,12 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  List<Task> get filteredTasks {
+  List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
     var filtered =
         tasks
             .where(
               (task) =>
-                  task.title.toLowerCase().contains(searchQuery.toLowerCase()),
+                  task.title.toLowerCase().contains(
+                    searchQuery.toLowerCase(),
+                  ) &&
+                  statuses.contains(task.status),
             )
             .toList();
 
@@ -133,7 +133,33 @@ class _HomeScreenState extends State<HomeScreen> {
       filtered.sort((a, b) => a.status.index.compareTo(b.status.index));
     }
 
+    if (sortBy == 'Title') {
+      filtered.sort(
+        (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+      );
+    }
+
     return filtered;
+  }
+
+  Widget _buildTaskList(
+    BuildContext context, {
+    required List<TaskStatus> statuses,
+  }) {
+    final filtered = _getTasksByStatus(statuses);
+
+    if (filtered.isEmpty) {
+      return Center(child: Text("No tasks found"));
+    }
+
+    return ListView.builder(
+      itemCount: filtered.length,
+      itemBuilder:
+          (context, index) => TaskCard(
+            task: filtered[index],
+            onClickItem: (task) => _navigateToEditTask(task),
+          ),
+    );
   }
 
   @override
@@ -144,7 +170,6 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text("Task App"),
             Spacer(),
-            // Profile image with logout functionality
             GestureDetector(
               onTap: _showLogoutDialog,
               child:
@@ -207,27 +232,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 12),
                   DropdownButton<String>(
-                    icon: Icon(Icons.more_vert),
+                    icon: Icon(Icons.list),
                     value: sortBy,
                     items: [
                       DropdownMenuItem(
-                        value: 'None',
+                        value: 'Default',
                         child: Row(
-                          children: [
-                            Icon(Icons.clear, size: 20),
-                            SizedBox(width: 8),
-                            Text('None'),
-                          ],
+                          children: [SizedBox(width: 10), Text('Default')],
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Title',
+                        child: Row(
+                          children: [SizedBox(width: 10), Text('Title')],
                         ),
                       ),
                       DropdownMenuItem(
                         value: 'Status',
                         child: Row(
-                          children: [
-                            Icon(Icons.sort, size: 20),
-                            SizedBox(width: 8),
-                            Text('Status'),
-                          ],
+                          children: [SizedBox(width: 10), Text('Status')],
                         ),
                       ),
                     ],
@@ -243,22 +266,39 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Expanded(
-              child:
-                  filteredTasks.isEmpty
-                      ? Center(child: Text("No tasks found"))
-                      : ListView.builder(
-                        itemCount: filteredTasks.length,
-                        itemBuilder:
-                            (context, index) => TaskCard(
-                              task: filteredTasks[index],
-                              onClickItem: (task) => _navigateToEditTask(task),
-                            ),
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    TabBar(
+                      tabs: [Tab(text: 'Ongoing'), Tab(text: 'Completed')],
+                      labelColor: Theme.of(context).colorScheme.primary,
+                      unselectedLabelColor: Colors.grey,
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildTaskList(
+                            context,
+                            statuses: [
+                              TaskStatus.planned,
+                              TaskStatus.inProgress,
+                            ],
+                          ),
+                          _buildTaskList(
+                            context,
+                            statuses: [TaskStatus.completed],
+                          ),
+                        ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddTask,
         child: Icon(Icons.add),

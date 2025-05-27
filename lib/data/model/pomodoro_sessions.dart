@@ -29,9 +29,10 @@ class PomodoroSessions {
 
   Map<String, dynamic> toMap() {
     return {
-      "taskId": taskId,
+      if (id != null) 'id': id,
+      "task_id": taskId,
       "duration": duration,
-      "completedAt": completedAt.toIso8601String(),
+      "completed_at": completedAt.toIso8601String(),
     };
   }
 
@@ -43,9 +44,9 @@ class PomodoroSessions {
   static PomodoroSessions fromMap(Map<String, dynamic> map) {
     return PomodoroSessions(
       id: map["id"],
-      taskId: map["taskId"],
+      taskId: map["task_id"],
       duration: map["duration"],
-      completedAt: DateTime.parse(map["completedAt"]),
+      completedAt: DateTime.parse(map["completed_at"]),
     );
   }
 }

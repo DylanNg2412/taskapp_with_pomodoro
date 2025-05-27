@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
 import 'package:taskapp_with_pomodoro/ui/chart/chart_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/home/home_screen.dart';
 import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
@@ -21,14 +19,6 @@ class _TabContainerState extends State<TabContainer> {
         child: Column(children: [Icon(icon), Text(title)]),
       ),
     );
-  }
-
-  void _navigateToPomodoro() {
-    context.pushNamed(Screen.pomodoro.name);
-  }
-
-  void _navigateToChart() {
-    context.pushNamed(Screen.chart.name);
   }
 
   @override

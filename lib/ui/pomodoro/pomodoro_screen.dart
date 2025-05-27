@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 
 class PomodoroScreen extends StatefulWidget {
-  const PomodoroScreen({super.key});
+  const PomodoroScreen({super.key, this.task});
+  final Task? task;
 
   @override
   State<PomodoroScreen> createState() => _PomodoroScreenState();
@@ -13,7 +15,6 @@ class PomodoroScreen extends StatefulWidget {
 enum TimerMode { pomodoro, shortBreak, longBreak }
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
-  
   final Map<TimerMode, int> durations = {
     TimerMode.pomodoro: 25 * 60,
     TimerMode.shortBreak: 5 * 60,
@@ -24,6 +25,13 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   int timeRemaining = 25 * 60;
   Timer? timer;
   bool isRunning = false;
+  bool isChecked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isChecked = widget.task?.status == TaskStatus.completed;
+  }
 
   void _startTimer() {
     timer?.cancel();
@@ -50,6 +58,24 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
       isRunning = false;
     });
   }
+
+void _completeTask() async {
+  if (widget.task == null) return;
+
+  try {
+    final updatedTask = widget.task!.copy(status: TaskStatus.completed);
+    final repo = TaskRepoSupabase();
+    await repo.updateTask(updatedTask);
+
+    if (!mounted) return;
+    _showSnackbar('Task complete!');
+    Navigator.pop(context, true);
+  } catch (e) {
+    if (!mounted) return;
+    _showSnackbar('Failed to complete task: $e', isSuccess: false);
+    debugPrint("Complete task error: $e");
+  }
+}
 
   void switchMode(TimerMode mode) {
     timer?.cancel();
@@ -88,6 +114,16 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
+    void _showSnackbar(String msg, {bool isSuccess = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isSuccess ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     timer?.cancel();
@@ -103,41 +139,43 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            ToggleButtons(
-              isSelected: [
-                currentMode == TimerMode.pomodoro,
-                currentMode == TimerMode.shortBreak,
-                currentMode == TimerMode.longBreak,
-              ],
-              onPressed: (index) {
-                switchMode(TimerMode.values[index]);
-              },
-              borderRadius: BorderRadius.circular(8),
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'Pomodoro',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+            Flexible(
+              child: ToggleButtons(
+                isSelected: [
+                  currentMode == TimerMode.pomodoro,
+                  currentMode == TimerMode.shortBreak,
+                  currentMode == TimerMode.longBreak,
+                ],
+                onPressed: (index) {
+                  switchMode(TimerMode.values[index]);
+                },
+                borderRadius: BorderRadius.circular(8),
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Pomodoro',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'Short Break',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Short Break',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'Long Break',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Long Break',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 40),
             Text(
               formatTime(timeRemaining),
               style: const TextStyle(
@@ -175,7 +213,46 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                 ),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 50),
+            if (widget.task != null) ...[
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Task',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Divider(color: Colors.white),
+              Card(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: CheckboxListTile(
+                  value: isChecked,
+                  onChanged: (value) {
+                    setState(() => isChecked = value!);
+                  },
+                  title: Text(widget.task!.title),
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _completeTask,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Complete Task'),
+              ),
+            ],
           ],
         ),
       ),
