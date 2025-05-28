@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:go_router/go_router.dart';
 import 'package:taskapp_with_pomodoro/auth/auth_service.dart';
-import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

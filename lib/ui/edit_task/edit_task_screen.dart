@@ -73,6 +73,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         body: _bodyController.text,
         img: fileName ?? "",
         userId: supabase.auth.currentUser!.id,
+        completedAt: DateTime.now()
       ),
     );
 

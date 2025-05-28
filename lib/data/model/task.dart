@@ -4,9 +4,10 @@ class Task {
   int? id;
   final String title;
   final String body;
-  final TaskStatus status; // by default it should be "Planned"
+  final TaskStatus status;
   final String img;
   final String? userId;
+  final DateTime? completedAt;
 
   static const name = "tasks";
 
@@ -17,6 +18,7 @@ class Task {
     this.status = TaskStatus.planned,
     this.img = "",
     required this.userId,
+    this.completedAt,
   });
 
   Task copy({
@@ -26,6 +28,7 @@ class Task {
     TaskStatus? status,
     String? img,
     String? userId,
+    DateTime? completedAt,
   }) {
     return Task(
       id: id ?? this.id,
@@ -34,6 +37,7 @@ class Task {
       status: status ?? this.status,
       img: img ?? this.img,
       userId: userId ?? this.userId,
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 
@@ -44,12 +48,13 @@ class Task {
       "status": status.name,
       "img": img,
       "user_id": userId,
+      "completed_at": completedAt?.toIso8601String(),
     };
   }
 
   @override
   String toString() {
-    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, img: $img, userId: $userId)";
+    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, img: $img, userId: $userId, completedAt: $completedAt)";
   }
 
   static Task fromMap(Map<String, dynamic> map) {
@@ -58,17 +63,15 @@ class Task {
       title: map["title"],
       body: map["body"],
       status: TaskStatus.values.firstWhere(
-        // gets all the possible values in TaskStatus enum, then finds the first enum value that matches the condition
-        (e) =>
-            e.name ==
-            map["status"], // compares the enum's name with the map's status value
-        orElse:
-            () =>
-                TaskStatus
-                    .planned, // if no match is found, it defaults to TaskStatus.planned
+        (e) => e.name == map["status"],
+        orElse: () => TaskStatus.planned,
       ),
       img: map["img"],
       userId: map["user_id"],
+      completedAt:
+          map['completed_at'] != null
+              ? DateTime.tryParse(map['completed_at'].toString())
+              : null,
     );
   }
 }

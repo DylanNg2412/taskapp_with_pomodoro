@@ -29,6 +29,13 @@ class TaskRepoSupabase {
   }
 
   Future<void> updateTask(Task task) async {
+    final updatedMap = task.toMap();
+
+    if (task.completedAt != null) {
+      updatedMap['completed_at'] = task.completedAt!.millisecondsSinceEpoch;
+    } else {
+      updatedMap['completed_at'] = null;
+    }
     await supabase
     .from('tasks')
     .update(task.toMap())
