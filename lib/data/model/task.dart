@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 
 class Task {
   int? id;
   final String title;
   final String body;
   final TaskStatus status;
+  final TaskPriority priority;
   final String img;
   final String? userId;
   final DateTime? completedAt;
@@ -16,6 +18,7 @@ class Task {
     required this.title,
     required this.body,
     this.status = TaskStatus.planned,
+    this.priority = TaskPriority.medium, // medium serves as a middle ground
     this.img = "",
     required this.userId,
     this.completedAt,
@@ -26,6 +29,7 @@ class Task {
     String? title,
     String? body,
     TaskStatus? status,
+    TaskPriority? priority,
     String? img,
     String? userId,
     DateTime? completedAt,
@@ -35,6 +39,7 @@ class Task {
       title: title ?? this.title,
       body: body ?? this.body,
       status: status ?? this.status,
+      priority: priority ?? this.priority,
       img: img ?? this.img,
       userId: userId ?? this.userId,
       completedAt: completedAt ?? this.completedAt,
@@ -46,6 +51,7 @@ class Task {
       "title": title,
       "body": body,
       "status": status.name,
+      "priority": priority.name,
       "img": img,
       "user_id": userId,
       "completed_at": completedAt?.toIso8601String(),
@@ -54,7 +60,7 @@ class Task {
 
   @override
   String toString() {
-    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, img: $img, userId: $userId, completedAt: $completedAt)";
+    return "Task(id: $id, title: $title, body: $body, status: ${status.name}, priority: ${priority.name}, img: $img, userId: $userId, completedAt: $completedAt)";
   }
 
   static Task fromMap(Map<String, dynamic> map) {
@@ -66,6 +72,10 @@ class Task {
         (e) => e.name == map["status"],
         orElse: () => TaskStatus.planned,
       ),
+      priority: TaskPriority.values.firstWhere(
+        (e) => e.name == map["priority"],
+        orElse: () => TaskPriority.medium,
+      ),
       img: map["img"],
       userId: map["user_id"],
       completedAt:
@@ -76,39 +86,5 @@ class Task {
   }
 }
 
-enum TaskStatus { planned, inProgress, completed }
 
-extension TaskStatusToString on TaskStatus {
-  String get displayName {
-    switch (this) {
-      case TaskStatus.planned:
-        return "Planned";
-      case TaskStatus.inProgress:
-        return "In Progress";
-      case TaskStatus.completed:
-        return "Completed";
-    }
-  }
 
-  IconData get taskIcon {
-    switch (this) {
-      case TaskStatus.planned:
-        return Icons.event_note;
-      case TaskStatus.inProgress:
-        return Icons.hourglass_empty;
-      case TaskStatus.completed:
-        return Icons.check_box_rounded;
-    }
-  }
-
-  Color get taskBgColor {
-    switch (this) {
-      case TaskStatus.planned:
-        return Color.fromARGB(255, 186, 72, 72);
-      case TaskStatus.inProgress:
-        return Color.fromARGB(255, 33, 150, 243);
-      case TaskStatus.completed:
-        return Color.fromARGB(255, 5, 184, 95);
-    }
-  }
-}

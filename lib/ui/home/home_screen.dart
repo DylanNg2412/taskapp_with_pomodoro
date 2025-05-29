@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
+import 'package:taskapp_with_pomodoro/service/query_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -117,30 +120,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
-    var filtered =
-        tasks
-            .where(
-              (task) =>
-                  task.title.toLowerCase().contains(
-                    searchQuery.toLowerCase(),
-                  ) &&
-                  statuses.contains(task.status),
-            )
-            .toList();
+List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
+  return filterTasks(
+    allTasks: tasks,
+    statuses: statuses,
+    searchQuery: searchQuery,
+    sortBy: sortBy,
+  );
+}
 
-    if (sortBy == 'Status') {
-      filtered.sort((a, b) => a.status.index.compareTo(b.status.index));
-    }
-
-    if (sortBy == 'Title') {
-      filtered.sort(
-        (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-      );
-    }
-
-    return filtered;
-  }
 
   Widget _buildTaskList(
     BuildContext context, {
@@ -165,41 +153,63 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
-            Text("Task App"),
+            Text(
+              "My Tasks",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                color: Colors.black87,
+              ),
+            ),
             Spacer(),
             GestureDetector(
               onTap: _showLogoutDialog,
-              child:
-                  userPhotoUrl != null
-                      ? Container(
-                        width: 32,
-                        height: 32,
-                        margin: EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(userPhotoUrl!),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child:
+                    userPhotoUrl != null
+                        ? Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(userPhotoUrl!),
+                            ),
+                          ),
+                        )
+                        : Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Colors.blue[400]!, Colors.blue[600]!],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            size: 22,
+                            color: Colors.white,
                           ),
                         ),
-                      )
-                      : Container(
-                        width: 32,
-                        height: 32,
-                        margin: EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade300,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 20,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
+              ),
             ),
           ],
         ),
@@ -207,16 +217,19 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
                 children: [
-                  Expanded(
+                  // Search Bar
+                  SizedBox(
                     child: AnimSearchBar(
-                      width: MediaQuery.of(context).size.width * 0.75,
+                      width: MediaQuery.of(context).size.width * 1.0,
                       textController: _searchController,
                       helpText: "Search tasks...",
                       autoFocus: false,
+                      suffixIcon: Icon(Icons.search, color: Colors.grey[600]),
                       onSuffixTap: () {
                         setState(() {
                           _searchController.clear();
@@ -230,50 +243,153 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  DropdownButton<String>(
-                    icon: Icon(Icons.list),
-                    value: sortBy,
-                    items: [
-                      DropdownMenuItem(
-                        value: 'Default',
-                        child: Row(
-                          children: [SizedBox(width: 10), Text('Default')],
+                  SizedBox(height: 12),
+                  // Sort Dropdown
+                  Row(
+                    children: [
+                      Icon(Icons.sort, color: Colors.grey[600], size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        "Sort by:",
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      DropdownMenuItem(
-                        value: 'Title',
-                        child: Row(
-                          children: [SizedBox(width: 10), Text('Title')],
-                        ),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Status',
-                        child: Row(
-                          children: [SizedBox(width: 10), Text('Status')],
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: DropdownButton<String>(
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.grey[600],
+                            ),
+                            value: sortBy,
+                            isExpanded: true,
+                            underline: SizedBox(),
+                            items: [
+                              DropdownMenuItem(
+                                value: "Default",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.list_alt,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("Default"),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: "Title",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.title,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("Title"),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: "Status",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.flag,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("Status"),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: "Priority",
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.priority_high,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text("Priority"),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  sortBy = value;
+                                });
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          sortBy = value;
-                        });
-                      }
-                    },
                   ),
                 ],
               ),
             ),
+            // Tabs Section
             Expanded(
               child: DefaultTabController(
                 length: 2,
                 child: Column(
                   children: [
-                    TabBar(
-                      tabs: [Tab(text: 'Ongoing'), Tab(text: 'Completed')],
-                      labelColor: Theme.of(context).colorScheme.primary,
-                      unselectedLabelColor: Colors.grey,
+                    Container(
+                      color: Colors.white,
+                      child: TabBar(
+                        tabs: [
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.schedule, size: 18),
+                                SizedBox(width: 6),
+                                Text("Ongoing"),
+                              ],
+                            ),
+                          ),
+                          Tab(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle, size: 18),
+                                SizedBox(width: 6),
+                                Text("Completed"),
+                              ],
+                            ),
+                          ),
+                        ],
+                        labelColor: Theme.of(context).colorScheme.primary,
+                        unselectedLabelColor: Colors.grey[600],
+                        indicatorColor: Theme.of(context).colorScheme.primary,
+                        indicatorWeight: 3,
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        unselectedLabelStyle: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                     Expanded(
                       child: TabBarView(
@@ -299,9 +415,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddTask,
-        child: Icon(Icons.add),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _navigateToAddTask,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          elevation: 0,
+          child: Icon(Icons.add, size: 28, color: Colors.white),
+        ),
       ),
     );
   }
@@ -314,17 +444,75 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
+    return Container(
       margin: EdgeInsets.all(10),
-      elevation: 4,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.2),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+        border: Border(
+          left: BorderSide(color: task.priority.priorityColor, width: 5),
+        ),
+      ),
       child: GestureDetector(
         onTap: () => onClickItem(task),
         child: ListTile(
-          leading: Icon(task.status.taskIcon, color: task.status.taskBgColor),
-          title: Text(task.title.toUpperCase()),
-          subtitle: Text("Status: ${task.status.displayName}"),
-          trailing: Icon(Icons.arrow_forward_ios, size: 16),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: task.status.taskBgColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              task.status.taskIcon,
+              color: task.status.taskBgColor,
+              size: 24,
+            ),
+          ),
+          title: Text(
+            task.title.toUpperCase(),
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+          subtitle: Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Text(
+                  "Status: ${task.status.displayName}",
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                SizedBox(width: 8),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: task.priority.priorityColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    task.priority.displayName,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: task.priority.priorityColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey[400],
+          ),
         ),
       ),
     );

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 import 'package:taskapp_with_pomodoro/service/storage_service.dart';
 import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
 
 class PomodoroScreen extends StatefulWidget {
@@ -91,7 +92,7 @@ void _completeTask() async {
       case TimerMode.pomodoro:
         return const Color.fromARGB(255, 186, 72, 72);
       case TimerMode.shortBreak:
-        return Color.fromARGB(255, 57, 132, 138);
+        return Color.fromARGB(255, 31, 155, 27);
       case TimerMode.longBreak:
         return Color.fromARGB(255, 57, 113, 150);
     }
@@ -102,7 +103,7 @@ void _completeTask() async {
       case TimerMode.pomodoro:
         return const Color.fromARGB(255, 186, 72, 72);
       case TimerMode.shortBreak:
-        return Color.fromARGB(255, 57, 132, 138);
+        return Color.fromARGB(255, 31, 155, 27);
       case TimerMode.longBreak:
         return Color.fromARGB(255, 57, 113, 150);
     }

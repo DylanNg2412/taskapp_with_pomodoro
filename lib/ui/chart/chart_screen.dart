@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 
 class ChartScreen extends StatefulWidget {
   const ChartScreen({super.key});

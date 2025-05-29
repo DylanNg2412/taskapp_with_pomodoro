@@ -1,4 +1,5 @@
 import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 
 List<Task> filterTasks({
   required List<Task> allTasks,
@@ -22,6 +23,10 @@ List<Task> filterTasks({
 
   if (sortBy == 'Title') {
     filtered.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+  }
+
+  if (sortBy == 'Priority') {
+    filtered.sort((a, b) => a.priority.index.compareTo(b.priority.index));
   }
 
   return filtered;
