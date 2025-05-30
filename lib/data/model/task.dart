@@ -4,7 +4,7 @@ import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
 class Task {
   int? id;
   final String title;
-  final String body;
+  final String? body;
   final TaskStatus status;
   final TaskPriority priority;
   final String img;
@@ -16,7 +16,7 @@ class Task {
   Task({
     this.id,
     required this.title,
-    required this.body,
+    this.body,
     this.status = TaskStatus.planned,
     this.priority = TaskPriority.medium, // medium serves as a middle ground
     this.img = "",

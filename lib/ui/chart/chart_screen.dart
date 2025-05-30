@@ -64,15 +64,15 @@ class _ChartScreenState extends State<ChartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeader(),
+                      _header(),
                       const SizedBox(height: 20),
-                      _buildTimeSelector(),
+                      _timeSelectorForChart(),
                       const SizedBox(height: 20),
-                      _buildTaskChart(),
+                      _showTaskChart(),
                       const SizedBox(height: 20),
-                      _buildTaskStats(),
+                      _showTaskStats(),
                       const SizedBox(height: 20),
-                      _buildWeeklyComparison(),
+                      _showWeeklyTaskComparison(),
                     ],
                   ),
                 ),
@@ -81,7 +81,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _header() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -103,7 +103,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildTimeSelector() {
+  Widget _timeSelectorForChart() {
     return Container(
       height: 50,
       child: ListView(
@@ -145,8 +145,8 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildTaskChart() {
-    final chartData = _parseTasksForChart();
+  Widget _showTaskChart() {
+    final chartData = _showChartForTasks();
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -213,7 +213,7 @@ class _ChartScreenState extends State<ChartScreen> {
                       reservedSize: 30,
                       interval: selectedDays > 14 ? 5 : 1,
                       getTitlesWidget: (value, meta) {
-                        return _buildBottomTitle(value, chartData);
+                        return _showTitleBtm(value, chartData);
                       },
                     ),
                   ),
@@ -308,7 +308,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildTaskStats() {
+  Widget _showTaskStats() {
     final completedToday = _getCompletedTasksForDay(DateTime.now());
     final totalCompleted = tasks.where((task) => task.status == TaskStatus.completed).length;
     final inProgress = tasks.where((task) => task.status == TaskStatus.inProgress).length;
@@ -340,17 +340,17 @@ class _ChartScreenState extends State<ChartScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildStatCard('Today', completedToday.toString(), Colors.blue, Icons.today)),
+              Expanded(child: _statusCard('Today', completedToday.toString(), Colors.blue, Icons.today)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Total', totalCompleted.toString(), Colors.green, Icons.check_circle)),
+              Expanded(child: _statusCard('Total', totalCompleted.toString(), Colors.green, Icons.check_circle)),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildStatCard('In Progress', inProgress.toString(), Colors.orange, Icons.hourglass_empty)),
+              Expanded(child: _statusCard('In Progress', inProgress.toString(), Colors.orange, Icons.hourglass_empty)),
               const SizedBox(width: 12),
-              Expanded(child: _buildStatCard('Avg/Day', avgPerDay.toString(), Colors.purple, Icons.trending_up)),
+              Expanded(child: _statusCard('Avg/Day', avgPerDay.toString(), Colors.purple, Icons.trending_up)),
             ],
           ),
         ],
@@ -358,7 +358,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
+  Widget _statusCard(String label, String value, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -391,7 +391,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  Widget _buildWeeklyComparison() {
+  Widget _showWeeklyTaskComparison() {
     final thisWeekCount = _getTasksForWeek(0);
     final lastWeekCount = _getTasksForWeek(1);
     final percentChange = lastWeekCount > 0 
@@ -471,8 +471,7 @@ class _ChartScreenState extends State<ChartScreen> {
     );
   }
 
-  // Helper methods
-  List<DayData> _parseTasksForChart() {
+  List<DayData> _showChartForTasks() {
     final now = DateTime.now();
     final dayDataList = <DayData>[];
     
@@ -506,7 +505,7 @@ class _ChartScreenState extends State<ChartScreen> {
     return dayDataList;
   }
 
-  Widget _buildBottomTitle(double value, List<DayData> chartData) {
+  Widget _showTitleBtm(double value, List<DayData> chartData) {
     if (value.toInt() >= 0 && value.toInt() < chartData.length) {
       final date = chartData[value.toInt()].date;
       return Padding(

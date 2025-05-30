@@ -120,17 +120,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
-  return filterTasks(
-    allTasks: tasks,
-    statuses: statuses,
-    searchQuery: searchQuery,
-    sortBy: sortBy,
-  );
-}
+  List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
+    return filterTasks(
+      allTasks: tasks,
+      statuses: statuses,
+      searchQuery: searchQuery,
+      sortBy: sortBy,
+    );
+  }
 
-
-  Widget _buildTaskList(
+  Widget _taskList(
     BuildContext context, {
     required List<TaskStatus> statuses,
   }) {
@@ -222,29 +221,44 @@ List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
-                  // Search Bar
-                  SizedBox(
-                    child: AnimSearchBar(
-                      width: MediaQuery.of(context).size.width * 1.0,
-                      textController: _searchController,
-                      helpText: "Search tasks...",
-                      autoFocus: false,
-                      suffixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                      onSuffixTap: () {
-                        setState(() {
-                          _searchController.clear();
-                          searchQuery = '';
-                        });
-                      },
-                      onSubmitted: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: SizedBox(
+                      height: 50,
+                      child: SearchBar(
+                        autoFocus: false,
+                        controller: _searchController,
+                        hintText: "Search tasks...",
+                        leading: Icon(Icons.search, color: Colors.grey[600]),
+                        trailing: [
+                          IconButton(
+                            icon: Icon(Icons.clear, color: Colors.grey[600]),
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                                searchQuery = '';
+                              });
+                            },
+                          ),
+                        ],
+                        backgroundColor: WidgetStateProperty.all(
+                          Colors.grey[100],
+                        ),
+                        elevation: WidgetStateProperty.all(1),
+                        onSubmitted: (value) {
+                          setState(() {
+                            searchQuery = value;
+                          });
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                          });
+                        },
+                      ),
                     ),
                   ),
                   SizedBox(height: 12),
-                  // Sort Dropdown
                   Row(
                     children: [
                       Icon(Icons.sort, color: Colors.grey[600], size: 20),
@@ -394,14 +408,14 @@ List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
                     Expanded(
                       child: TabBarView(
                         children: [
-                          _buildTaskList(
+                          _taskList(
                             context,
                             statuses: [
                               TaskStatus.planned,
                               TaskStatus.inProgress,
                             ],
                           ),
-                          _buildTaskList(
+                          _taskList(
                             context,
                             statuses: [TaskStatus.completed],
                           ),
@@ -420,7 +434,9 @@ List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -428,8 +444,8 @@ List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
         ),
         child: FloatingActionButton(
           onPressed: _navigateToAddTask,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          elevation: 0,
+          backgroundColor: Colors.blue,
+          elevation: 1,
           child: Icon(Icons.add, size: 28, color: Colors.white),
         ),
       ),

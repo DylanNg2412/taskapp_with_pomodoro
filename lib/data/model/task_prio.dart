@@ -1,4 +1,3 @@
-import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
 enum TaskPriority { low, medium, high }
@@ -18,11 +17,11 @@ extension TaskPriorityToString on TaskPriority {
   Color get priorityColor {
     switch (this) {
       case TaskPriority.low:
-        return Colors.green;
+        return Colors.green[400]!;
       case TaskPriority.medium:
-        return Colors.orange;
+        return Colors.orange[400]!;
       case TaskPriority.high:
-        return Colors.red;
+        return Colors.red[400]!;
     }
   }
 }
