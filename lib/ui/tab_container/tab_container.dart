@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:taskapp_with_pomodoro/ui/chart/chart_screen.dart';
-import 'package:taskapp_with_pomodoro/ui/home/home_screen.dart';
-import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
+import 'package:tomato_task/ui/chart/chart_screen.dart';
+import 'package:tomato_task/ui/home/home_screen.dart';
+import 'package:tomato_task/ui/pomodoro/pomodoro_screen.dart';
 
 class TabContainer extends StatefulWidget {
   const TabContainer({super.key});
@@ -26,7 +26,9 @@ class _TabContainerState extends State<TabContainer> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        body: const TabBarView(children: [HomeScreen(), PomodoroScreen(), ChartScreen()]),
+        body: const TabBarView(
+          children: [HomeScreen(), PomodoroScreen(), ChartScreen()],
+        ),
         bottomNavigationBar: TabBar(
           indicatorColor: Colors.transparent,
           labelColor: Colors.blue,

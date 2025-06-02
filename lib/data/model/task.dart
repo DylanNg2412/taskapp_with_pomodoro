@@ -1,5 +1,5 @@
-import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
+import 'package:tomato_task/data/model/task_prio.dart';
+import 'package:tomato_task/data/model/task_status.dart';
 
 class Task {
   int? id;
@@ -80,11 +80,8 @@ class Task {
       userId: map["user_id"],
       completedAt:
           map['completed_at'] != null
-              ? DateTime.tryParse(map['completed_at'].toString())
+              ? DateTime.tryParse(map['completed_at'].toString())?.toLocal()
               : null,
     );
   }
 }
-
-
-

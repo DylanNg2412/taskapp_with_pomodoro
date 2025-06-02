@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
-import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
-import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
-import 'package:anim_search_bar/anim_search_bar.dart';
-import 'package:taskapp_with_pomodoro/service/query_service.dart';
+import 'package:tomato_task/data/model/task.dart';
+import 'package:tomato_task/data/model/task_prio.dart';
+import 'package:tomato_task/data/model/task_status.dart';
+import 'package:tomato_task/data/repo/task_repo_supabase.dart';
+import 'package:tomato_task/navigation/navigation.dart';
+import 'package:tomato_task/service/query_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,10 +18,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final repo = TaskRepoSupabase();
   var tasks = <Task>[];
+
   String? userPhotoUrl;
   String searchQuery = '';
   String sortBy = 'Default';
+
   final TextEditingController _searchController = TextEditingController();
+  bool isLoading = true;
 
   @override
   void dispose() {
@@ -111,13 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToEditTask(Task task) async {
-    var res = await context.pushNamed(
+    await context.pushNamed(
       Screen.editTask.name,
       pathParameters: {'id': task.id!.toString()},
     );
-    if (res == true) {
-      _refresh();
-    }
+    _refresh();
   }
 
   List<Task> _getTasksByStatus(List<TaskStatus> statuses) {
@@ -129,14 +129,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _taskList(
-    BuildContext context, {
-    required List<TaskStatus> statuses,
-  }) {
+  Widget _taskList(BuildContext context, {required List<TaskStatus> statuses}) {
     final filtered = _getTasksByStatus(statuses);
 
     if (filtered.isEmpty) {
-      return Center(child: Text("No tasks found"));
+      return Center(child: Text("Loading tasks..."));
     }
 
     return ListView.builder(
@@ -415,10 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               TaskStatus.inProgress,
                             ],
                           ),
-                          _taskList(
-                            context,
-                            statuses: [TaskStatus.completed],
-                          ),
+                          _taskList(context, statuses: [TaskStatus.completed]),
                         ],
                       ),
                     ),

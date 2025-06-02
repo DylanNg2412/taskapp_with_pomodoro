@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
+import 'package:tomato_task/data/model/task.dart';
+import 'package:tomato_task/data/model/task_status.dart';
+import 'package:tomato_task/data/repo/task_repo_supabase.dart';
 
 class ChartScreen extends StatefulWidget {
   const ChartScreen({super.key});
@@ -15,38 +16,23 @@ class _ChartScreenState extends State<ChartScreen> {
   List<Task> tasks = [];
   bool isLoading = true;
   int selectedDays = 7;
+  final repo = TaskRepoSupabase();
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    _getTasks();
   }
 
-  Future<void> _loadTasks() async {
-    try {
-      setState(() => isLoading = true);
-      
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+  Future<void> _getTasks() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final completedTasks = await repo.getCompletedTasksByUser(user.id);
 
-      final response = await Supabase.instance.client
-          .from('tasks')
-          .select()
-          .eq('user_id', user.id)
-          .order('completed_at', ascending: false);
-
-      setState(() {
-        tasks = response.map((json) => Task.fromMap(json)).toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading tasks: $e')),
-        );
-      }
-    }
+    setState(() {
+      tasks = completedTasks;
+      isLoading = false;
+    });
   }
 
   @override
@@ -54,29 +40,30 @@ class _ChartScreenState extends State<ChartScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadTasks,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _header(),
-                      const SizedBox(height: 20),
-                      _timeSelectorForChart(),
-                      const SizedBox(height: 20),
-                      _showTaskChart(),
-                      const SizedBox(height: 20),
-                      _showTaskStats(),
-                      const SizedBox(height: 20),
-                      _showWeeklyTaskComparison(),
-                    ],
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                  onRefresh: _getTasks,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _header(),
+                        const SizedBox(height: 20),
+                        _timeSelectorForChart(),
+                        const SizedBox(height: 20),
+                        _showTaskChart(),
+                        const SizedBox(height: 20),
+                        _showTaskStats(),
+                        const SizedBox(height: 20),
+                        _showWeeklyTaskComparison(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
       ),
     );
   }
@@ -95,9 +82,9 @@ class _ChartScreenState extends State<ChartScreen> {
         const SizedBox(height: 8),
         Text(
           'Track your productivity over time',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.grey[600],
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
         ),
       ],
     );
@@ -108,46 +95,62 @@ class _ChartScreenState extends State<ChartScreen> {
       height: 50,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        children: [7, 14, 30].map((days) {
-          final isSelected = selectedDays == days;
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => setState(() => selectedDays = days),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isSelected ? Theme.of(context).primaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
-                  ),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+        children:
+            [7, 14, 30].map((days) {
+              final isSelected = selectedDays == days;
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: () => setState(() => selectedDays = days),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
-                  ] : null,
-                ),
-                child: Text(
-                  '$days days',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey[700],
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey.shade300,
+                      ),
+                      boxShadow:
+                          isSelected
+                              ? [
+                                BoxShadow(
+                                  color: Theme.of(
+                                    context,
+                                  ).primaryColor.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                              : null,
+                    ),
+                    child: Text(
+                      '$days days',
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.grey[700],
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
 
   Widget _showTaskChart() {
     final chartData = _showChartForTasks();
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -170,9 +173,9 @@ class _ChartScreenState extends State<ChartScreen> {
             children: [
               Text(
                 'Tasks Completed',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               Icon(
                 Icons.trending_up,
@@ -205,8 +208,12 @@ class _ChartScreenState extends State<ChartScreen> {
                 ),
                 titlesData: FlTitlesData(
                   show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -245,14 +252,23 @@ class _ChartScreenState extends State<ChartScreen> {
                 maxY: _getMaxY(chartData),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: chartData.asMap().entries.map((entry) {
-                      return FlSpot(entry.key.toDouble(), entry.value.count.toDouble());
-                    }).toList(),
+                    spots:
+                        chartData.asMap().entries.map((entry) {
+                          return FlSpot(
+                            entry.key.toDouble(),
+                            entry.value.count.toDouble(),
+                          );
+                        }).toList(),
                     isCurved: true,
                     gradient: LinearGradient(
                       colors: [
                         const Color.fromARGB(255, 5, 184, 95),
-                        const Color.fromARGB(255, 5, 184, 95).withValues(alpha: 0.8),
+                        const Color.fromARGB(
+                          255,
+                          5,
+                          184,
+                          95,
+                        ).withValues(alpha: 0.8),
                       ],
                     ),
                     barWidth: 3,
@@ -274,8 +290,18 @@ class _ChartScreenState extends State<ChartScreen> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color.fromARGB(255, 5, 184, 95).withValues(alpha: 0.3),
-                          const Color.fromARGB(255, 5, 184, 95).withValues(alpha: 0.05),
+                          const Color.fromARGB(
+                            255,
+                            5,
+                            184,
+                            95,
+                          ).withValues(alpha: 0.3),
+                          const Color.fromARGB(
+                            255,
+                            5,
+                            184,
+                            95,
+                          ).withValues(alpha: 0.05),
                         ],
                       ),
                     ),
@@ -310,9 +336,12 @@ class _ChartScreenState extends State<ChartScreen> {
 
   Widget _showTaskStats() {
     final completedToday = _getCompletedTasksForDay(DateTime.now());
-    final totalCompleted = tasks.where((task) => task.status == TaskStatus.completed).length;
-    final inProgress = tasks.where((task) => task.status == TaskStatus.inProgress).length;
-    final avgPerDay = selectedDays > 0 ? (totalCompleted / selectedDays).round() : 0;
+    final totalCompleted =
+        tasks.where((task) => task.status == TaskStatus.completed).length;
+    final inProgress =
+        tasks.where((task) => task.status == TaskStatus.inProgress).length;
+    final avgPerDay =
+        selectedDays > 0 ? (totalCompleted / selectedDays).round() : 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -333,24 +362,52 @@ class _ChartScreenState extends State<ChartScreen> {
         children: [
           Text(
             'Quick Stats',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _statusCard('Today', completedToday.toString(), Colors.blue, Icons.today)),
+              Expanded(
+                child: _statusCard(
+                  'Today',
+                  completedToday.toString(),
+                  Colors.blue,
+                  Icons.today,
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _statusCard('Total', totalCompleted.toString(), Colors.green, Icons.check_circle)),
+              Expanded(
+                child: _statusCard(
+                  'Total',
+                  totalCompleted.toString(),
+                  Colors.green,
+                  Icons.check_circle,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _statusCard('In Progress', inProgress.toString(), Colors.orange, Icons.hourglass_empty)),
+              Expanded(
+                child: _statusCard(
+                  'In Progress',
+                  inProgress.toString(),
+                  Colors.orange,
+                  Icons.hourglass_empty,
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _statusCard('Avg/Day', avgPerDay.toString(), Colors.purple, Icons.trending_up)),
+              Expanded(
+                child: _statusCard(
+                  'Avg/Day',
+                  avgPerDay.toString(),
+                  Colors.purple,
+                  Icons.trending_up,
+                ),
+              ),
             ],
           ),
         ],
@@ -394,9 +451,10 @@ class _ChartScreenState extends State<ChartScreen> {
   Widget _showWeeklyTaskComparison() {
     final thisWeekCount = _getTasksForWeek(0);
     final lastWeekCount = _getTasksForWeek(1);
-    final percentChange = lastWeekCount > 0 
-        ? ((thisWeekCount - lastWeekCount) / lastWeekCount * 100).round()
-        : 0;
+    final percentChange =
+        lastWeekCount > 0
+            ? ((thisWeekCount - lastWeekCount) / lastWeekCount * 100).round()
+            : 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -417,9 +475,9 @@ class _ChartScreenState extends State<ChartScreen> {
         children: [
           Text(
             'Weekly Comparison',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Row(
@@ -429,27 +487,47 @@ class _ChartScreenState extends State<ChartScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('This Week', style: TextStyle(color: Colors.grey[600])),
-                  Text('$thisWeekCount tasks', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$thisWeekCount tasks',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Last Week', style: TextStyle(color: Colors.grey[600])),
-                  Text('$lastWeekCount tasks', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$lastWeekCount tasks',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: percentChange >= 0 ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                  color:
+                      percentChange >= 0
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      percentChange >= 0 ? Icons.trending_up : Icons.trending_down,
+                      percentChange >= 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
                       size: 16,
                       color: percentChange >= 0 ? Colors.green : Colors.red,
                     ),
@@ -474,26 +552,36 @@ class _ChartScreenState extends State<ChartScreen> {
   List<DayData> _showChartForTasks() {
     final now = DateTime.now();
     final dayDataList = <DayData>[];
-    
+
     for (int i = selectedDays - 1; i >= 0; i--) {
       final date = DateTime(now.year, now.month, now.day - i);
       dayDataList.add(DayData(date: date, count: 0));
     }
-    
-    final completedTasks = tasks.where((task) => 
-      task.status == TaskStatus.completed && task.completedAt != null
-    ).toList();
-    
+
+    final completedTasks =
+        tasks
+            .where(
+              (task) =>
+                  task.status == TaskStatus.completed &&
+                  task.completedAt != null,
+            )
+            .toList();
+
     for (final task in completedTasks) {
       final completedDate = task.completedAt!;
-      final completedDay = DateTime(completedDate.year, completedDate.month, completedDate.day);
-      
-      final dayIndex = dayDataList.indexWhere((dayData) =>
-        dayData.date.year == completedDay.year &&
-        dayData.date.month == completedDay.month &&
-        dayData.date.day == completedDay.day
+      final completedDay = DateTime(
+        completedDate.year,
+        completedDate.month,
+        completedDate.day,
       );
-      
+
+      final dayIndex = dayDataList.indexWhere(
+        (dayData) =>
+            dayData.date.year == completedDay.year &&
+            dayData.date.month == completedDay.month &&
+            dayData.date.day == completedDay.day,
+      );
+
       if (dayIndex != -1) {
         dayDataList[dayIndex] = DayData(
           date: dayDataList[dayIndex].date,
@@ -501,7 +589,7 @@ class _ChartScreenState extends State<ChartScreen> {
         );
       }
     }
-    
+
     return dayDataList;
   }
 
@@ -525,29 +613,47 @@ class _ChartScreenState extends State<ChartScreen> {
 
   double _getMaxY(List<DayData> chartData) {
     if (chartData.isEmpty) return 5;
-    final maxCount = chartData.map((e) => e.count).reduce((a, b) => a > b ? a : b);
+    final maxCount = chartData
+        .map((e) => e.count)
+        .reduce((a, b) => a > b ? a : b);
     return (maxCount + 2).toDouble();
   }
 
   int _getCompletedTasksForDay(DateTime day) {
     return tasks.where((task) {
-      if (task.status != TaskStatus.completed || task.completedAt == null) return false;
+      if (task.status != TaskStatus.completed || task.completedAt == null) {
+        return false;
+      }
       final completedDate = task.completedAt!;
       return completedDate.year == day.year &&
-             completedDate.month == day.month &&
-             completedDate.day == day.day;
+          completedDate.month == day.month &&
+          completedDate.day == day.day;
     }).length;
   }
 
   int _getTasksForWeek(int weeksAgo) {
     final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1 + (weeksAgo * 7)));
+    final today = DateTime(now.year, now.month, now.day);
+
+    final startOfWeek = today.subtract(
+      Duration(days: today.weekday - 1 + (weeksAgo * 7)),
+    );
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    
+
     return tasks.where((task) {
-      if (task.status != TaskStatus.completed || task.completedAt == null) return false;
-      final completedDate = task.completedAt!;
-      return completedDate.isAfter(startOfWeek) && completedDate.isBefore(endOfWeek.add(const Duration(days: 1)));
+      if (task.status != TaskStatus.completed || task.completedAt == null) {
+        return false;
+      }
+
+      final completedDate = DateTime(
+        task.completedAt!.year,
+        task.completedAt!.month,
+        task.completedAt!.day,
+      );
+
+      return completedDate.isAtSameMomentAs(startOfWeek) ||
+          (completedDate.isAfter(startOfWeek) &&
+              completedDate.isBefore(endOfWeek.add(const Duration(days: 1))));
     }).length;
   }
 }

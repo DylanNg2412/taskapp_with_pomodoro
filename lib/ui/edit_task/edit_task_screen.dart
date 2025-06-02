@@ -5,12 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
-import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
-import 'package:taskapp_with_pomodoro/service/storage_service.dart';
-import 'package:taskapp_with_pomodoro/ui/pomodoro/pomodoro_screen.dart';
+import 'package:tomato_task/data/model/task.dart';
+import 'package:tomato_task/data/model/task_prio.dart';
+import 'package:tomato_task/data/model/task_status.dart';
+import 'package:tomato_task/data/repo/task_repo_supabase.dart';
+import 'package:tomato_task/navigation/navigation.dart';
+import 'package:tomato_task/service/storage_service.dart';
+import 'package:tomato_task/ui/pomodoro/pomodoro_screen.dart';
 
 class EditTaskScreen extends StatefulWidget {
   const EditTaskScreen({super.key, required this.id});
@@ -156,20 +157,18 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
 
     if (!mounted) return;
 
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PomodoroScreen(task: updated)),
     );
 
-    if (result == true) {
-      final refreshed = await repo.getTaskById(task!.id!);
-      if (mounted) {
-        setState(() {
-          task = refreshed;
-          _titleController.text = task!.title;
-          _loadImage(); // reload image if needed
-        });
-      }
+    final refreshed = await repo.getTaskById(task!.id!);
+    if (mounted) {
+      setState(() {
+        task = refreshed;
+        _titleController.text = task!.title;
+        _loadImage(); // reload image if needed
+      });
     }
   }
 
@@ -230,10 +229,17 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Text(
+                "Your task is ${task?.status.displayName} now",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
               const SizedBox(height: 32),
-
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(

@@ -5,10 +5,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_prio.dart';
-import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
-import 'package:taskapp_with_pomodoro/service/storage_service.dart';
+import 'package:tomato_task/data/model/task.dart';
+import 'package:tomato_task/data/model/task_prio.dart';
+import 'package:tomato_task/data/repo/task_repo_supabase.dart';
+import 'package:tomato_task/service/storage_service.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});

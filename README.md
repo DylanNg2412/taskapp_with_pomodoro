@@ -1,4 +1,4 @@
-# taskapp_with_pomodoro
+# tomato_task
 
 A new Flutter project.
 

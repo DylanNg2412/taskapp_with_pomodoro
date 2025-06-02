@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/navigation/navigation.dart';
+import 'package:tomato_task/navigation/navigation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {

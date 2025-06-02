@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
+import 'package:tomato_task/data/model/task.dart';
 
 class TaskRepoSupabase {
   static final TaskRepoSupabase _instance = TaskRepoSupabase._init();
@@ -31,23 +31,25 @@ class TaskRepoSupabase {
   Future<void> updateTask(Task task) async {
     final updatedMap = task.toMap();
 
-    if (task.completedAt != null) {
-      updatedMap['completed_at'] = task.completedAt!.millisecondsSinceEpoch;
-    } else {
-      updatedMap['completed_at'] = null;
-    }
+    updatedMap['completed_at'] = task.completedAt?.toIso8601String();
     await supabase
-    .from('tasks')
-    .update(task.toMap())
-    .eq('id', task.id!)
-    .eq('user_id', task.userId!);
+        .from('tasks')
+        .update(task.toMap())
+        .eq('id', task.id!)
+        .eq('user_id', task.userId!);
   }
 
   Future<void> deleteTask(int id, String userId) async {
-    await supabase
-    .from('tasks')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', userId);
+    await supabase.from('tasks').delete().eq('id', id).eq('user_id', userId);
+  }
+
+  Future<List<Task>> getCompletedTasksByUser(String userId) async {
+    final response = await supabase
+        .from('tasks')
+        .select()
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .order('completed_at', ascending: false);
+    return response.map((json) => Task.fromMap(json)).toList();
   }
 }

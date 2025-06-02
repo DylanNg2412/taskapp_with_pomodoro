@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:taskapp_with_pomodoro/data/model/task.dart';
-import 'package:taskapp_with_pomodoro/data/model/task_status.dart';
-import 'package:taskapp_with_pomodoro/data/repo/task_repo_supabase.dart';
+import 'package:tomato_task/data/model/task.dart';
+import 'package:tomato_task/data/model/task_status.dart';
+import 'package:tomato_task/data/repo/task_repo_supabase.dart';
 
 class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key, this.task});
@@ -89,9 +89,9 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   Color getBackgroundColor() {
     switch (currentMode) {
       case TimerMode.pomodoro:
-        return const Color.fromARGB(255, 167, 71, 71);
+        return Color.fromARGB(255, 189, 48, 48);
       case TimerMode.shortBreak:
-        return Color.fromARGB(255, 15, 126, 65);
+        return Color.fromARGB(255, 12, 156, 44);
       case TimerMode.longBreak:
         return Color.fromARGB(255, 57, 113, 150);
     }
@@ -100,9 +100,9 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   Color getTextColor() {
     switch (currentMode) {
       case TimerMode.pomodoro:
-        return const Color.fromARGB(255, 167, 71, 71);
+        return Color.fromARGB(255, 189, 48, 48);
       case TimerMode.shortBreak:
-        return Color.fromARGB(255, 15, 126, 65);
+        return Color.fromARGB(255, 12, 156, 44);
       case TimerMode.longBreak:
         return Color.fromARGB(255, 57, 113, 150);
     }
@@ -156,8 +156,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                 padding: const EdgeInsets.all(4),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    double buttonWidth =
-                        (constraints.maxWidth - 16) / 3;
+                    double buttonWidth = (constraints.maxWidth - 16) / 3;
                     return ToggleButtons(
                       isSelected: [
                         currentMode == TimerMode.pomodoro,
@@ -210,8 +209,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                     width: 280,
                     height: 280,
                     child: CircularProgressIndicator(
-                      value:
-                          _getProgress(),
+                      value: _getProgress(),
                       strokeWidth: 8,
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
