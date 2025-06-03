@@ -9,7 +9,6 @@ import 'package:tomato_task/data/model/task.dart';
 import 'package:tomato_task/data/model/task_prio.dart';
 import 'package:tomato_task/data/model/task_status.dart';
 import 'package:tomato_task/data/repo/task_repo_supabase.dart';
-import 'package:tomato_task/navigation/navigation.dart';
 import 'package:tomato_task/service/storage_service.dart';
 import 'package:tomato_task/ui/pomodoro/pomodoro_screen.dart';
 
