@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "taskapp_with_pomodoro" "\0"
+            VALUE "FileDescription", "tomato_task" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "taskapp_with_pomodoro" "\0"
+            VALUE "InternalName", "tomato_task" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "taskapp_with_pomodoro.exe" "\0"
-            VALUE "ProductName", "taskapp_with_pomodoro" "\0"
+            VALUE "OriginalFilename", "tomato_task.exe" "\0"
+            VALUE "ProductName", "tomato_task" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
