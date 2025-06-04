@@ -52,4 +52,14 @@ class TaskRepoSupabase {
         .order('completed_at', ascending: false);
     return response.map((json) => Task.fromMap(json)).toList();
   }
+
+    Future<List<Task>> getInProgressTasksByUser(String userId) async {
+    final response = await supabase
+        .from('tasks')
+        .select()
+        .eq('user_id', userId)
+        .eq('status', 'inProgress')
+        .order('completed_at', ascending: false);
+    return response.map((json) => Task.fromMap(json)).toList();
+  }
 }

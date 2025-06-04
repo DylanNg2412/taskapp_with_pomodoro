@@ -28,9 +28,11 @@ class _ChartScreenState extends State<ChartScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
     final completedTasks = await repo.getCompletedTasksByUser(user.id);
+    final inProgressTasks = await repo.getInProgressTasksByUser(user.id);
 
     setState(() {
-      tasks = completedTasks;
+      tasks = completedTasks + inProgressTasks;
+
       isLoading = false;
     });
   }
@@ -91,7 +93,7 @@ class _ChartScreenState extends State<ChartScreen> {
   }
 
   Widget _timeSelectorForChart() {
-    return Container(
+    return SizedBox(
       height: 50,
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -220,7 +222,7 @@ class _ChartScreenState extends State<ChartScreen> {
                       reservedSize: 30,
                       interval: selectedDays > 14 ? 5 : 1,
                       getTitlesWidget: (value, meta) {
-                        return _showTitleBtm(value, chartData);
+                        return _displayDateRange(value, chartData);
                       },
                     ),
                   ),
@@ -249,7 +251,7 @@ class _ChartScreenState extends State<ChartScreen> {
                 minX: 0,
                 maxX: (selectedDays - 1).toDouble(),
                 minY: 0,
-                maxY: _getMaxY(chartData),
+                maxY: _getMaxYAxisValue(chartData),
                 lineBarsData: [
                   LineChartBarData(
                     spots:
@@ -338,8 +340,7 @@ class _ChartScreenState extends State<ChartScreen> {
     final completedToday = _getCompletedTasksForDay(DateTime.now());
     final totalCompleted =
         tasks.where((task) => task.status == TaskStatus.completed).length;
-    final inProgress =
-        tasks.where((task) => task.status == TaskStatus.inProgress).length;
+    final inProgressTotal = _getInProgressTasksForDay(DateTime.now());
     final avgPerDay =
         selectedDays > 0 ? (totalCompleted / selectedDays).round() : 0;
 
@@ -394,7 +395,7 @@ class _ChartScreenState extends State<ChartScreen> {
               Expanded(
                 child: _statusCard(
                   'In Progress',
-                  inProgress.toString(),
+                  inProgressTotal.toString(),
                   Colors.orange,
                   Icons.hourglass_empty,
                 ),
@@ -593,7 +594,7 @@ class _ChartScreenState extends State<ChartScreen> {
     return dayDataList;
   }
 
-  Widget _showTitleBtm(double value, List<DayData> chartData) {
+  Widget _displayDateRange(double value, List<DayData> chartData) {
     if (value.toInt() >= 0 && value.toInt() < chartData.length) {
       final date = chartData[value.toInt()].date;
       return Padding(
@@ -611,10 +612,10 @@ class _ChartScreenState extends State<ChartScreen> {
     return const Text('');
   }
 
-  double _getMaxY(List<DayData> chartData) {
+  double _getMaxYAxisValue(List<DayData> chartData) {
     if (chartData.isEmpty) return 5;
     final maxCount = chartData
-        .map((e) => e.count)
+        .map((value) => value.count)
         .reduce((a, b) => a > b ? a : b);
     return (maxCount + 2).toDouble();
   }
@@ -631,12 +632,19 @@ class _ChartScreenState extends State<ChartScreen> {
     }).length;
   }
 
-  int _getTasksForWeek(int weeksAgo) {
+  int _getInProgressTasksForDay(DateTime day) {
+    return tasks.where((task) {
+      return task.status == TaskStatus.inProgress &&
+          task.userId == Supabase.instance.client.auth.currentUser?.id;
+    }).length;
+  }
+
+  int _getTasksForWeek(int pastWeeks) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     final startOfWeek = today.subtract(
-      Duration(days: today.weekday - 1 + (weeksAgo * 7)),
+      Duration(days: today.weekday - 1 + (pastWeeks * 7)),
     );
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
