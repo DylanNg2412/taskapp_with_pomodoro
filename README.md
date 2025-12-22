@@ -1,10 +1,10 @@
 # 🍅 Tomato Task
 
-A Flutter-based task management application integrated with the Pomodoro Technique to help you stay focused and productive. 
+A Flutter-based task management application integrated with the Pomodoro Technique to help you stay focused and productive.
 
 ## 📝 About
 
-Tomato Task combines traditional task management with the Pomodoro Technique, allowing you to organize your tasks and work on them in focused time intervals. Stay productive while maintaining a healthy work-rest balance. 
+Tomato Task combines traditional task management with the Pomodoro Technique, allowing you to organize your tasks and work on them in focused time intervals. Stay productive while maintaining a healthy work-rest balance.
 
 ## ✨ Features
 
